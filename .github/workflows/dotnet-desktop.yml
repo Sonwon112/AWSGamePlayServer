@@ -1,0 +1,76 @@
+name: .NET Core Console Application
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  DOCKER_IMAGE_NAME: sonwonill/play-server
+  EC2_HOST: 52.70.174.90
+  EC2_SSH_USER: ec2-user
+  PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+  CONTAINER_NAME: play-server-container
+  Solution_Name: NetworkPlayServer  # 솔루션 이름
+
+jobs:
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+    - name: Publish
+      run: dotnet publish -c Release -o ./publish
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Console App
+        path: ./publish
+
+    - name: Build the Docker image
+      run: docker build . --file MatchServer/Dockerfile --tag ${{env.DOCKER_IMAGE_NAME}}:latest
+
+    - name: Login Docker Hub using tkn
+      run: echo "${{secrets.DOCKER_TOKEN}}" | docker login -u ${{secrets.DOCKER_USER}} --password-stdin
+
+    - name: Push the Docker image
+      run: docker push ${{env.DOCKER_IMAGE_NAME}}:latest
+
+  deploy-to-ec2:
+
+    needs: build-and-push-docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_SSH_USER }}
+          key: ${{ env.PRIVATE_KEY }}
+          script: |
+            CONTAINER_ID=$(sudo docker ps -q --filter "publish=3306" --filter "publish=9100")
+
+            sudo docker stop ${{ env.CONTAINER_NAME }}
+            sudo docker rm ${{ env.CONTAINER_NAME }}
+
+            sudo docker pull ${{env.DOCKER_IMAGE_NAME}}:latest
+            sudo docker run --name ${{ env.CONTAINER_NAME }} -d -p 9100:9100 -e TZ=Asia/Seoul ${{env.DOCKER_IMAGE_NAME}}:latest
