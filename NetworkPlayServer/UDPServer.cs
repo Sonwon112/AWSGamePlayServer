@@ -48,11 +48,6 @@ namespace NetworkPlayServer
                 {
                     IPEndPoint targetEndPoint = new IPEndPoint(IPAddress.Any, 0);
                     byte[] readByte = client.Receive(ref targetEndPoint);
-                    if (decideDataType(readByte))
-                    {
-
-                    }
-
                     
                     string tmp = Encoding.UTF8.GetString(readByte);
                     DTO dto = JsonSerializer.Deserialize<DTO>(tmp);
@@ -81,6 +76,7 @@ namespace NetworkPlayServer
                                 }
                                 break;
                             case MessageType.INSTANTIATE:
+                                Console.WriteLine(players[dto.id] + "생성되었습니다");
                                 foreach(Player p in players.Values)
                                 {
                                     string msg = dto.id + ";" + dto.msg;
@@ -88,6 +84,21 @@ namespace NetworkPlayServer
                                 }
                                 break;
                             case MessageType.SEND_TRANSFORM:
+
+                                //Console.WriteLine(dto.msg);
+                                string[] posStr = dto.msg.Split(";");
+                                float x = float.Parse(posStr[0]);
+                                float y = float.Parse(posStr[1]);
+                                float z = float.Parse(posStr[2]);
+                                players[dto.id].setTransform(new Vector3(x,y,z));
+                                SendTransform(readByte, dto.id);
+                                break;
+                            case MessageType.SEND_PARTICIPANT:
+                                if (dto.msg.Equals("die"))
+                                {
+                                    
+                                    players.Remove(dto.id);
+                                }
                                 break;
                         }
                     }
@@ -100,31 +111,21 @@ namespace NetworkPlayServer
             }
         }
 
-        public bool decideDataType(byte[] receivedData)
-        {
-            if (receivedData[1] == 1)return true;
-            return false;
-        }
 
-        public void UnPackPosition(byte[] receivedData)
-        {
-            using(var stream = new MemoryStream())
-            using(var reader =  new BinaryReader(stream))
-            {
-                byte type = reader.ReadByte();
-                int clientId = reader.ReadInt32();
-                float x = reader.ReadSingle();
-                float y = reader.ReadSingle();
-                float z = reader.ReadSingle();
-                players[clientId].setTransform(new Vector3(x, y, z));
-            }
-        }
-
-        public void SendTransform(byte[] sendData,int clientId) { 
+        public void SendTransform(byte[] data, int clientId) { 
             foreach(int i in players.Keys)
             {
                 if(i == clientId) continue;
-                client.Send(sendData, sendData.Length, players[i].endPoint.Address.ToString(), players[i].endPoint.Port);
+                client.Send(data, data.Length, players[i].endPoint.Address.ToString(), players[i].endPoint.Port);
+            }
+        }
+
+        public void SendDie(byte[] data ,int clientId)
+        {
+            foreach (int i in players.Keys)
+            {
+                if (i == clientId) continue;
+                client.Send(data, data.Length, players[i].endPoint.Address.ToString(), players[i].endPoint.Port);
             }
         }
 

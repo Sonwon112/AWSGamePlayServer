@@ -10,7 +10,7 @@ namespace NetworkPlayServer
     internal class GameManager
     {
         public static GameManager Instance = new GameManager();
-        private int totalCnt = 10;
+        private int totalCnt = 2;
         private int currentCnt = 0;
 
         public GameManager() {
