@@ -46,7 +46,7 @@ jobs:
         path: ./publish
 
     - name: Build the Docker image
-      run: docker build . --file MatchServer/Dockerfile --tag ${{env.DOCKER_IMAGE_NAME}}:latest
+      run: docker build . --file NetworkPlayServer/Dockerfile --tag ${{env.DOCKER_IMAGE_NAME}}:latest
 
     - name: Login Docker Hub using tkn
       run: echo "${{secrets.DOCKER_TOKEN}}" | docker login -u ${{secrets.DOCKER_USER}} --password-stdin
