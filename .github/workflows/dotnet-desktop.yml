@@ -8,7 +8,7 @@ on:
 
 env:
   DOCKER_IMAGE_NAME: sonwonill/play-server
-  EC2_HOST: 52.70.174.90
+  EC2_HOST: 52.20.220.130
   EC2_SSH_USER: ec2-user
   PRIVATE_KEY: ${{ secrets.EC2_KEY }}
   CONTAINER_NAME: play-server-container
