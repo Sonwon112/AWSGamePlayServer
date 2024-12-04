@@ -73,4 +73,4 @@ jobs:
             sudo docker rm ${{ env.CONTAINER_NAME }}
 
             sudo docker pull ${{env.DOCKER_IMAGE_NAME}}:latest
-            sudo docker run --name ${{ env.CONTAINER_NAME }} -d -p 9100:9100 -e TZ=Asia/Seoul ${{env.DOCKER_IMAGE_NAME}}:latest
+            sudo docker run --name ${{ env.CONTAINER_NAME }} -d --network host -e TZ=Asia/Seoul ${{env.DOCKER_IMAGE_NAME}}:latest
