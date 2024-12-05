@@ -76,7 +76,7 @@ namespace NetworkPlayServer
                                 }
                                 break;
                             case MessageType.INSTANTIATE:
-                                Console.WriteLine(players[dto.id] + "생성되었습니다");
+                                Console.WriteLine(players[dto.id].getNickname() + "생성되었습니다");
                                 foreach(Player p in players.Values)
                                 {
                                     string msg = dto.id + ";" + dto.msg;
