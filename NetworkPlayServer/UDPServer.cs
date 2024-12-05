@@ -51,7 +51,7 @@ namespace NetworkPlayServer
                     
                     string tmp = Encoding.UTF8.GetString(readByte);
                     DTO dto = JsonSerializer.Deserialize<DTO>(tmp);
-                    Console.WriteLine(targetEndPoint.Address.ToString() + ":"+targetEndPoint.Port.ToString()+" :" + tmp);
+                    //Console.WriteLine(targetEndPoint.Address.ToString() + ":"+targetEndPoint.Port.ToString()+" :" + tmp);
                     
                     if (dto != null) {
                         MessageType type = (MessageType)Enum.Parse(typeof(MessageType), dto.type);
