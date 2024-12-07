@@ -54,23 +54,23 @@ jobs:
     - name: Push the Docker image
       run: docker push ${{env.DOCKER_IMAGE_NAME}}:latest
 
-  deploy-to-ec2:
+  #deploy-to-ec2:
 
-    needs: build-and-push-docker
-    runs-on: ubuntu-latest
+  #  needs: build-and-push-docker
+  #  runs-on: ubuntu-latest
 
-    steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.EC2_HOST }}
-          username: ${{ env.EC2_SSH_USER }}
-          key: ${{ env.PRIVATE_KEY }}
-          script: |
-            CONTAINER_ID=$(sudo docker ps -q --filter "publish=3306" --filter "publish=9100")
+  #  steps:
+  #    - name: Deploy to EC2
+  #      uses: appleboy/ssh-action@master
+  #      with:
+  #        host: ${{ env.EC2_HOST }}
+  #        username: ${{ env.EC2_SSH_USER }}
+  #        key: ${{ env.PRIVATE_KEY }}
+  #        script: |
+  #          CONTAINER_ID=$(sudo docker ps -q --filter "publish=3306" --filter "publish=9100")
 
-            sudo docker stop ${{ env.CONTAINER_NAME }}
-            sudo docker rm ${{ env.CONTAINER_NAME }}
+  #          sudo docker stop ${{ env.CONTAINER_NAME }}
+  #          sudo docker rm ${{ env.CONTAINER_NAME }}
 
-            sudo docker pull ${{env.DOCKER_IMAGE_NAME}}:latest
-            sudo docker run --name ${{ env.CONTAINER_NAME }} -d --network host -e TZ=Asia/Seoul ${{env.DOCKER_IMAGE_NAME}}:latest
+  #          sudo docker pull ${{env.DOCKER_IMAGE_NAME}}:latest
+  #          sudo docker run --name ${{ env.CONTAINER_NAME }} -d --network host -e TZ=Asia/Seoul ${{env.DOCKER_IMAGE_NAME}}:latest

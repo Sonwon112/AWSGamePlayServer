@@ -77,10 +77,11 @@ namespace NetworkPlayServer
                                 break;
                             case MessageType.INSTANTIATE:
                                 Console.WriteLine(players[dto.id].getNickname() + "생성되었습니다");
-                                foreach(Player p in players.Values)
+                                foreach(int key in players.Keys)
                                 {
+                                    if(dto.id == key) continue;
                                     string msg = dto.id + ";" + dto.msg;
-                                    SendToTarget(p.endPoint, MessageType.INSTANTIATE,msg);
+                                    SendToTarget(players[key].endPoint, MessageType.INSTANTIATE,msg);  
                                 }
                                 break;
                             case MessageType.SEND_TRANSFORM:
