@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Numerics;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Net.Http.Headers;
 
 namespace NetworkPlayServer
 {
@@ -23,7 +26,7 @@ namespace NetworkPlayServer
         private const string CRUD_URL = "https://obrwl6gf6vjdk3qwgdlartgumy0prkns.lambda-url.us-east-1.on.aws/";
         private const string EC2_URL = "https://o3zu5xaiso32noqdaw2qolit3u0sqhdb.lambda-url.us-east-1.on.aws/";
 
-        HttpClient httpClient = new HttpClient();
+        private HttpClient httpClient;
 
         public UDPServer()
         {
@@ -45,8 +48,9 @@ namespace NetworkPlayServer
                 listenThread.Start();
                 Console.WriteLine("Play Server Start");
             }
+            httpClient = new HttpClient();
         }
-        public async void StartListen()
+        public void StartListen()
         {
             while (isServerOn)
             {
@@ -78,12 +82,8 @@ namespace NetworkPlayServer
                                     {
                                         SendToTarget(p.endPoint, MessageType.CONNECT, "COMPLETE");
                                     }
-                                    // 참여 불가로 변경
-                                    HttpContent crud_content = new StringContent("{\"instance_id\":\""+InstanceId+"\"}", Encoding.UTF8, "application/json");
-                                    await httpClient.PutAsync(CRUD_URL + "update_item", crud_content);
 
-                                    HttpContent create_content = new StringContent("{\"action\":\"create\"}", Encoding.UTF8, "application/json");
-                                    var response = await httpClient.PostAsync(EC2_URL, create_content);
+                                    ChangeServerState();
 
                                 }
                                 else
@@ -167,6 +167,23 @@ namespace NetworkPlayServer
             {
                 Console.WriteLine("exception : "+e.ToString());
             }
+        }
+
+        public async void ChangeServerState()
+        {
+            try
+            {
+                HttpContent create_content = new StringContent("{\"action\":\"create\"}", Encoding.UTF8, "application/json");
+                var create_response = await httpClient.PostAsync(EC2_URL, create_content);
+
+                // 참여 불가로 변경
+                HttpContent crud_content = new StringContent("{\"instance_id\":\"" + InstanceId + "\"}", Encoding.UTF8, "application/json");
+                var update_response = await httpClient.PutAsync(CRUD_URL + "update_item", crud_content);
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.ToString());
+            }
+            
         }
 
     }
