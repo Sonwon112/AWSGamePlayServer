@@ -19,6 +19,12 @@ namespace NetworkPlayServer
         private bool isServerOn = false;
         private GameManager instance = GameManager.Instance;
 
+        private string InstanceId = "";
+        private const string CRUD_URL = "https://obrwl6gf6vjdk3qwgdlartgumy0prkns.lambda-url.us-east-1.on.aws/";
+        private const string EC2_URL = "https://o3zu5xaiso32noqdaw2qolit3u0sqhdb.lambda-url.us-east-1.on.aws/";
+
+        HttpClient httpClient = new HttpClient();
+
         public UDPServer()
         {
             try
@@ -58,7 +64,11 @@ namespace NetworkPlayServer
                         switch (type)
                         {
                             case MessageType.CONNECT:
-                                Player player = new Player(targetEndPoint,dto.msg);
+                                string[] clientAndInstance = dto.msg.Split(";");
+
+                                Player player = new Player(targetEndPoint, clientAndInstance[0]);
+                                InstanceId = clientAndInstance[1];
+
                                 players.Add(dto.id, player);
                                 SendToTarget(player.endPoint, MessageType.CONNECT, "SUCCESS");
                                 if (instance.currCntUp())
@@ -68,6 +78,13 @@ namespace NetworkPlayServer
                                     {
                                         SendToTarget(p.endPoint, MessageType.CONNECT, "COMPLETE");
                                     }
+                                    // 참여 불가로 변경
+                                    HttpContent crud_content = new StringContent("{\"instance_id\":\""+InstanceId+"\"}", Encoding.UTF8, "application/json");
+                                    await httpClient.PutAsync(CRUD_URL + "update_item", crud_content);
+
+                                    HttpContent create_content = new StringContent("{\"action\":\"create\"}", Encoding.UTF8, "application/json");
+                                    var response = await httpClient.PostAsync(EC2_URL, create_content);
+
                                 }
                                 else
                                 {
@@ -97,8 +114,14 @@ namespace NetworkPlayServer
                             case MessageType.SEND_PARTICIPANT:
                                 if (dto.msg.Equals("die"))
                                 {
-                                    
+                                    Console.WriteLine("Dead" + players[dto.id].getNickname());
                                     players.Remove(dto.id);
+                                    if (players.Count == 1)
+                                    {
+                                        foreach (Player p in players.Values) {
+                                            SendToTarget(p.endPoint, MessageType.WIN, "win");
+                                        }
+                                    }
                                 }
                                 break;
                         }
