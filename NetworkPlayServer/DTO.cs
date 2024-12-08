@@ -24,5 +24,6 @@ enum MessageType
     CONNECT,
     INSTANTIATE,
     SEND_PARTICIPANT,
-    SEND_TRANSFORM
+    SEND_TRANSFORM,
+    WIN
 }
